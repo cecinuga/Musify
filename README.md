@@ -1,7 +1,7 @@
 # `Musify`, a p2p platform for sharing and playing music 
 ### Written in `rust` using `libp2p`.
 
-![Musify](relative=assets/musify.png?raw=true "Musify")
+![Musify](assets/musify.png?raw=true "Musify")
 
 ## How it Works?
 ### Commands
