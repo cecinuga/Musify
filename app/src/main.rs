@@ -11,7 +11,7 @@ use app::{
         MyBehaviourEvent
     }, 
     network::network_settings::network::{create_swarm, PEER_ID, },
-    handle_command
+    handle_command, providing_files,
 };
 
 #[tokio::main]
@@ -22,6 +22,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut swarm = create_swarm();
 
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+
+    providing_files(&mut swarm.behaviour_mut().kademlia).await?;
 
     loop {
         select!{
