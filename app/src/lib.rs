@@ -1,8 +1,8 @@
 use libp2p::{Swarm};
 use tokio::io::{Lines, BufReader, Stdin};
-use network::behaviour;
+use network::network_behaviour;
 
-pub async fn handle_command(swarm: &mut Swarm<behaviour::behaviour::MyBehaviour>,line: &String){
+pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBehaviour>,line: &String){
     let mut args = line.split(' ');
 
     match args.next(){
