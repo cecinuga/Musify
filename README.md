@@ -1,7 +1,7 @@
 # `Musify`, a p2p platform for sharing and playing music 
 ### Written in `rust` using `libp2p`.
 
-![Musify](assets/musify.png?raw=true "Musify")
+<img align="center" width="100%" height="100%" src="./assets/musify.png">
 
 ## How it Works?
 ### Commands
