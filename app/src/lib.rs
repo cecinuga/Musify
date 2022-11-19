@@ -35,16 +35,12 @@ pub async fn providing_files(kademlia: &mut Kademlia<MemoryStore>) -> Result<(),
 
     match Path::new(&music_dir).is_dir(){
         true=>{
-            let mut files = fs::read_dir(music_dir.clone()).unwrap();
-
-            match files.next().is_none(){
-                false=>{
-                    for file in files{
+            if fs::read_dir(music_dir.clone()).unwrap().count()>0{
+                    for file in fs::read_dir(music_dir.clone()).unwrap(){
+                        //println!("Start providing: {:?}", file.unwrap().file_name().to_str());
                         kademlia.start_providing(Key::new(&file.unwrap().file_name().to_str().expect("File missing").as_bytes())).unwrap();
                     }
-                },
-                _=>{println!("Your assets directory is empty.")}  
-            }
+            } else { println!("Your assets directory is empty.")} 
         }
         false=>{
             fs::create_dir(music_dir.clone()).unwrap();
