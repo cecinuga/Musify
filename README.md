@@ -8,6 +8,9 @@
 ### Working Logic
 ## Protocol used: 
 `mDND`: used for discovery peers in the network.
+
 `Gossipsub`: used for sending messages between peers.
+
 `Kademlia`: used for providing files's path.
+
 `RequestResponse`: used for request and sending file.
