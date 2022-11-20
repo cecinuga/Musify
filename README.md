@@ -5,11 +5,17 @@
 
 ## How it Works?
 ### Commands
+`help` list all command
+
 `ls ps` list all peers in the network.
+
+`search: <filename>` list all peers that provide the filename.
+
+`download: <peer> <filename>` download the file from the peer.
 
 ### Working Logic
 ## Protocol used: 
-`mDND`: used for discovery peers in the network.
+`mDNS`: used for discovery peers in the network.
 
 `Gossipsub`: used for sending messages between peers.
 

@@ -2,7 +2,7 @@ use tokio::{io::{BufReader, stdin, AsyncBufReadExt}, select};
 use libp2p::{
     futures::StreamExt,
     swarm::{SwarmEvent,},
-    mdns::{MdnsEvent},
+    mdns::{MdnsEvent}, kad::{KademliaEvent, QueryResult},
 };
 use std::{error::Error,};
 
@@ -16,7 +16,6 @@ use app::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    println!("PeerID: {}", PEER_ID.clone());
     
     let mut stdin = BufReader::new(stdin()).lines();
     let mut swarm = create_swarm();
@@ -24,7 +23,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
 
     providing_files(&mut swarm.behaviour_mut().kademlia).await?;
-
+    println!("[#]PeerID: {}", PEER_ID.clone());
+    println!("\t");
     loop {
         select!{
             line = stdin.next_line() => handle_command(&mut swarm, &line.unwrap().expect("Message not sended.")).await,
@@ -32,6 +32,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 SwarmEvent::NewListenAddr{ address, .. } => {
                     println!("{}", address)
                 },
+                //add listener to request_response send_request
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(KademliaEvent::OutboundQueryCompleted{result, ..})) => {
+                    match result {
+                        QueryResult::GetProviders(Ok(ok)) => {
+                            if(!ok.providers.is_empty()) {
+                                println!("{:?}", ok.providers);
+                            } else{println!("[#]Your item is not founded.")}
+                        }
+                        _=>{}
+                    }
+                }
                 SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(MdnsEvent::Discovered(list))) => {
                     for (peer_id, multiaddr) in list {
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);

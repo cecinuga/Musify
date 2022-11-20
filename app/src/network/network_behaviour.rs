@@ -27,7 +27,7 @@ pub mod behaviour {
     #[derive(Clone)]
     pub struct FileExchangeCodec();
     #[derive(Debug, Clone, PartialEq, Eq)]
-    pub struct FileRequest(String);
+    pub struct FileRequest(pub String);
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct FileResponse(Vec<u8>);
 
