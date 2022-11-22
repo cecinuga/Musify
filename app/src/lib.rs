@@ -1,6 +1,6 @@
 use libp2p::{Swarm, kad::{Kademlia, store::MemoryStore, record::Key}, PeerId, identity::PublicKey, multihash::Multihash, Multiaddr, request_response::ResponseChannel};
 use network::{network_behaviour::{self, behaviour::{FileRequest, FileResponse}}, network_settings::network::PATH};
-use std::{fs, error::Error, path::Path,};
+use std::{fs, error::Error, path::Path, io::Write,};
 use network::network_behaviour::behaviour::MyBehaviour;
 
 pub fn request_search(swarm: &mut Swarm<MyBehaviour>, item: String) {
@@ -15,11 +15,12 @@ pub fn request_download(swarm: &mut Swarm<MyBehaviour>, peer_id: &PeerId, file_n
 }
 pub fn response_download(swarm: &mut Swarm<MyBehaviour>,channel: ResponseChannel<FileResponse>,request: FileRequest){
     let mut file_path = PATH.to_string();
-    file_path.push_str(&format!("{}.mp3",request.0));
+    let mut file_name = format!("{}.mp3",request.0);
+    file_path.push_str(&file_name);
 
     let file_to_send = [
-        [request.0.as_bytes().to_vec().len() as u8].to_vec(),
-        request.0.as_bytes().to_vec(), 
+        [file_name.as_bytes().to_vec().len() as u8].to_vec(),
+        file_name.as_bytes().to_vec(), 
         std::fs::read(file_path).unwrap(),
     ].concat();
 
@@ -29,7 +30,14 @@ pub fn response_download(swarm: &mut Swarm<MyBehaviour>,channel: ResponseChannel
     swarm.behaviour_mut().request_response.send_response(channel, FileResponse(file_to_send)).expect("Connection to peer to be still open.");
 }
 pub fn save_file(swarm: &mut Swarm<MyBehaviour>, response: FileResponse){
-    println!("[!!!]File Ricevuto!");
+    let len = response.0[0];
+    let file_name = std::str::from_utf8(&response.0[1..=len as usize]).unwrap();
+    let filepath_name = format!("{}{}",PATH.as_str(),file_name);
+    let file_bytes = &response.0[len as usize + 1..];
+    println!("[!!!]File {} Ricevuto!", filepath_name);
+
+    let mut file = std::fs::File::create(filepath_name).expect("Error with creating file");
+    file.write_all(file_bytes).unwrap();
 }
 
 pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBehaviour>,line: &String){
