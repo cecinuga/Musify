@@ -7,9 +7,9 @@ pub mod network{
     use libp2p::Transport;
 
     pub static KEYS: Lazy<Keypair> = Lazy::new(Keypair::generate_ed25519);
-    pub static PEER_ID: Lazy<PeerId> = Lazy::new(|| PeerId::from(KEYS.public()));
+    pub static PEER_ID: Lazy<PeerId> = Lazy::new(|| PeerId::from_public_key(&KEYS.public()));
     pub static TOPIC: Lazy<IdentTopic> = Lazy::new(|| Topic::new("musify"));
-
+    pub static PATH: Lazy<String> = Lazy::new(|| String::from("./assets/music/"));
 
     pub fn create_swarm()-> Swarm<MyBehaviour> {
         let swarm = {

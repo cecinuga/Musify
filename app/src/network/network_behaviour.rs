@@ -29,7 +29,7 @@ pub mod behaviour {
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct FileRequest(pub String);
     #[derive(Debug, Clone, PartialEq, Eq)]
-    pub struct FileResponse(Vec<u8>);
+    pub struct FileResponse(pub Vec<u8>);
 
     impl ProtocolName for FileExchangeProtocol {
         fn protocol_name(&self) -> &[u8]{

@@ -2,7 +2,7 @@ use tokio::{io::{BufReader, stdin, AsyncBufReadExt}, select};
 use libp2p::{
     futures::StreamExt,
     swarm::{SwarmEvent,},
-    mdns::{MdnsEvent}, kad::{KademliaEvent, QueryResult},
+    mdns::{MdnsEvent}, kad::{KademliaEvent, QueryResult}, request_response::{RequestResponseEvent, RequestResponseMessage},
 };
 use std::{error::Error,};
 
@@ -10,8 +10,8 @@ use app::{
     network::network_behaviour::behaviour::{
         MyBehaviourEvent
     }, 
-    network::network_settings::network::{create_swarm, PEER_ID, },
-    handle_command, providing_files,
+    network::{network_settings::network::{create_swarm, PEER_ID, PATH}, network_behaviour::behaviour::FileResponse},
+    handle_command, providing_files, request_download, response_download, save_file, 
 };
 
 #[tokio::main]
@@ -32,7 +32,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 SwarmEvent::NewListenAddr{ address, .. } => {
                     println!("{}", address)
                 },
-                //add listener to request_response send_request
+                SwarmEvent::Behaviour(MyBehaviourEvent::RequestResponse(RequestResponseEvent::Message{ message, ..},
+                )) => match message {
+                    RequestResponseMessage::Request{
+                        request, channel, ..
+                    } => { 
+                        response_download(&mut swarm, channel, request);
+                    }
+                    RequestResponseMessage::Response{ 
+                        request_id, response 
+                    } => {
+                        save_file(&mut swarm, response);
+                    }
+                }
                 SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(KademliaEvent::OutboundQueryCompleted{result, ..})) => {
                     match result {
                         QueryResult::GetProviders(Ok(ok)) => {

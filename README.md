@@ -9,9 +9,9 @@
 
 `ls ps` list all peers in the network.
 
-`search: <filename>` list all peers that provide the filename.
+`sh: <filename>` list all peers that provide the filename.
 
-`download: <peer> <filename>` download the file from the peer.
+`dwn: <peer> <filename>` download the file from the peer.
 
 ### Working Logic
 ## Protocol used: 
