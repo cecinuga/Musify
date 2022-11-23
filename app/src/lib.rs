@@ -1,6 +1,7 @@
 use libp2p::{Swarm, kad::{Kademlia, store::MemoryStore, record::Key}, PeerId, identity::PublicKey, multihash::Multihash, Multiaddr, request_response::ResponseChannel};
 use network::{network_behaviour::{self, behaviour::{FileRequest, FileResponse}}, network_settings::network::PATH};
-use std::{fs, error::Error, path::Path, io::Write,};
+use rodio::{OutputStream, Sink, Decoder};
+use std::{fs::{self, File}, error::Error, path::Path, io::{Write, BufReader},};
 use network::network_behaviour::behaviour::MyBehaviour;
 
 pub fn request_search(swarm: &mut Swarm<MyBehaviour>, item: String) {
@@ -27,17 +28,20 @@ pub fn response_download(swarm: &mut Swarm<MyBehaviour>,channel: ResponseChannel
     //println!("[#]Received request {:?}", request);
     //println!("[#]Sending file: {:?}", file_path);
     //println!("{:?}",std::fs::read_dir(PATH.to_string()));
-    swarm.behaviour_mut().request_response.send_response(channel, FileResponse(file_to_send)).expect("Connection to peer to be still open.");
+    if let Err(e) = swarm.behaviour_mut().request_response.send_response(channel, FileResponse(file_to_send)){
+        println!("[!]Connection to peer has to still open.");
+    }
 }
 pub fn save_file(swarm: &mut Swarm<MyBehaviour>, response: FileResponse){
     let len = response.0[0];
     let file_name = std::str::from_utf8(&response.0[1..=len as usize]).unwrap();
-    let filepath_name = format!("{}{}",PATH.as_str(),file_name);
+    let file_name_path = format!("{}{}",PATH.as_str(),file_name);
     let file_bytes = &response.0[len as usize + 1..];
-    println!("[!!!]File {} Ricevuto!", filepath_name);
+    println!("[+]File {} Ricevuto!", file_name);
 
-    let mut file = std::fs::File::create(filepath_name).expect("Error with creating file");
-    file.write_all(file_bytes).unwrap();
+    if let Ok(mut file_void) = std::fs::File::create(file_name_path){
+        match file_void.write_all(file_bytes).unwrap(){   _=>{}   }
+    }
 }
 
 pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBehaviour>,line: &String){
@@ -55,15 +59,32 @@ pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBe
             }
         },
         Some("sh:")=>{
-            request_search(swarm, args.next().expect("Missing name").to_string());
+            if let Some(name) = args.next(){
+                request_search(swarm, name.to_string());
+            } else { println!("[-]Usage: 'sh: <file_name>'") }
         }
         Some("dwn:")=>{
-            let peer_id_multiaddr:Multiaddr = format!("/p2p/{}",args.next().expect("Missing Peer").to_string()).parse().unwrap();
-            let file_name = args.next().expect("Missing Filena<me").to_string();
-
-            let peer_id = PeerId::try_from_multiaddr(&peer_id_multiaddr).unwrap();
-
-            request_download(swarm, &peer_id, file_name);
+            if let Some(peer_id_input) = args.next(){
+                if let Ok(peer_id_multiaddr) = format!("/p2p/{}",peer_id_input.to_string()).parse::<Multiaddr>(){
+                    if let Some(file_name) = args.next(){
+                        let file_name = file_name.to_string();
+                        let peer_id = PeerId::try_from_multiaddr(&peer_id_multiaddr).unwrap();
+    
+                        request_download(swarm, &peer_id, file_name);
+                    } else { println!("[-]Usage: 'dwn: <peer_id> <file_name>'") }
+                } 
+            } else { println!("[-]Usage: 'dwn: <peer_id> <file_name>'") }
+        }
+        Some("play:")=>{
+            if let Some(file_name) = args.next(){
+                let (_stream, handler) = OutputStream::try_default().unwrap();
+                let sink = Sink::try_new(&handler).unwrap();
+                let file_path = format!("{:?}{}",PATH,file_name);
+                if let Ok(file) = File::open(file_path){
+                    sink.append(Decoder::new(BufReader::new(file)).unwrap());
+                    sink.sleep_until_end();
+                } else{ println!("[-]File not founded."); }                
+            } else { println!("[-]Usage: 'play: <peer_id> <file_name>'"); }
         }
         Some("ls")=>{
             match args.next(){ 
