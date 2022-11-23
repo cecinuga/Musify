@@ -13,6 +13,10 @@
 
 `dwn: <peer> <filename>` download the file from the peer.
 
+`play: <filename>` enjoy the music.
+
+`stop: ` stop the party. [WORKING_PROGRESS]
+
 ### Working Logic
 ## Protocol used: 
 `mDNS`: used for discovery peers in the network.

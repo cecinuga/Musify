@@ -1,7 +1,7 @@
 use libp2p::{Swarm, kad::{Kademlia, store::MemoryStore, record::Key}, PeerId, identity::PublicKey, multihash::Multihash, Multiaddr, request_response::ResponseChannel};
 use network::{network_behaviour::{self, behaviour::{FileRequest, FileResponse}}, network_settings::network::PATH};
 use rodio::{OutputStream, Sink, Decoder};
-use std::{fs::{self, File}, error::Error, path::Path, io::{Write, BufReader},};
+use std::{fs::{self, File, read_dir}, error::Error, path::Path, io::{Write, BufReader},};
 use network::network_behaviour::behaviour::MyBehaviour;
 
 pub fn request_search(swarm: &mut Swarm<MyBehaviour>, item: String) {
@@ -79,11 +79,11 @@ pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBe
             if let Some(file_name) = args.next(){
                 let (_stream, handler) = OutputStream::try_default().unwrap();
                 let sink = Sink::try_new(&handler).unwrap();
-                let file_path = format!("{:?}{}",PATH,file_name);
+                let file_path = format!("{}{}.mp3",PATH.as_str(),file_name);
                 if let Ok(file) = File::open(file_path){
                     sink.append(Decoder::new(BufReader::new(file)).unwrap());
                     sink.sleep_until_end();
-                } else{ println!("[-]File not founded."); }                
+                } else{ println!("[-]File not founded."); }          
             } else { println!("[-]Usage: 'play: <peer_id> <file_name>'"); }
         }
         Some("ls")=>{
