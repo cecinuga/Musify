@@ -22,8 +22,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
 
-    providing_files(&mut swarm.behaviour_mut().kademlia).await?;
     println!("[#]PeerID: {}", PEER_ID.clone());
+    providing_files(&mut swarm.behaviour_mut().kademlia).await?;
     println!("\t");
     loop {
         select!{

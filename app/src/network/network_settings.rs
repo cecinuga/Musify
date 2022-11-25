@@ -1,6 +1,7 @@
 pub mod network{
     use std::{iter, time::Duration};
 
+    use futures::Sink;
     use libp2p::{Swarm, tcp::{TokioTcpTransport, GenTcpConfig}, core::upgrade, noise::NoiseAuthenticated, mplex::MplexConfig, kad::{store::MemoryStore, Kademlia}, mdns::{Mdns, MdnsConfig}, request_response::{RequestResponse, ProtocolSupport}, gossipsub::{GossipsubConfigBuilder, ValidationMode, Gossipsub, MessageAuthenticity, Topic, IdentTopic}, swarm::SwarmBuilder, identity::Keypair, PeerId};
     use once_cell::sync::Lazy;
     use crate::network::network_behaviour::behaviour::{MyBehaviour, FileExchangeProtocol, FileExchangeCodec};

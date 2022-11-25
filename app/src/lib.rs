@@ -43,9 +43,19 @@ pub fn save_file(swarm: &mut Swarm<MyBehaviour>, response: FileResponse){
         match file_void.write_all(file_bytes).unwrap(){   _=>{}   }
     }
 }
-
+pub fn start_file(sink:&Sink, file_name: &str){
+    let file_path = format!("{}{}.mp3",PATH.as_str(),file_name);
+    if let Ok(file) = File::open(file_path){
+        sink.append(Decoder::new(BufReader::new(file)).unwrap());
+        sink.sleep_until_end();
+    } else{ println!("[-]File not founded."); }      
+}
+pub fn stop_file(sink: &Sink){
+}
 pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBehaviour>,line: &String){
     let mut args = line.split(' ');
+    let (_stream, handler) = OutputStream::try_default().unwrap();
+    let sink = Sink::try_new(&handler).unwrap();
 
     match args.next(){
         Some("sto:")=>{
@@ -77,14 +87,11 @@ pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBe
         }
         Some("play:")=>{
             if let Some(file_name) = args.next(){
-                let (_stream, handler) = OutputStream::try_default().unwrap();
-                let sink = Sink::try_new(&handler).unwrap();
-                let file_path = format!("{}{}.mp3",PATH.as_str(),file_name);
-                if let Ok(file) = File::open(file_path){
-                    sink.append(Decoder::new(BufReader::new(file)).unwrap());
-                    sink.sleep_until_end();
-                } else{ println!("[-]File not founded."); }          
+                start_file(&sink, file_name);    
             } else { println!("[-]Usage: 'play: <peer_id> <file_name>'"); }
+        }
+        Some("stop")=>{
+            stop_file(&sink);    
         }
         Some("ls")=>{
             match args.next(){ 
@@ -107,7 +114,7 @@ pub async fn handle_command(swarm: &mut Swarm<network_behaviour::behaviour::MyBe
 }
 
 pub async fn providing_files(kademlia: &mut Kademlia<MemoryStore>) -> Result<(), Box<dyn Error>> {
-    let music_dir = "./assets/music".to_string();
+    let music_dir = PATH.to_string();
 
     match Path::new(&music_dir).is_dir(){
         true=>{
@@ -125,7 +132,7 @@ pub async fn providing_files(kademlia: &mut Kademlia<MemoryStore>) -> Result<(),
                             .expect("Missing name")
                             .to_string();
 
-                        println!("[#]Start providing: {:?}", file_name);
+                        println!("[+]Providing: {:?}", file_name);
                         kademlia.start_providing(Key::new(file_name)).unwrap();
                     }
             } else { println!("Your assets directory is empty.")} 
